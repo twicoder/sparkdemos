@@ -1,0 +1,56 @@
+##pyspark
+
+// load data
+path = "file:///home/icoder/data/SparkBasic/NYPD_7_Major_Felony_Incidents.csv"
+data = sc.textFile(path)
+
+// show some data
+data.take(10)
+
+// remove header column
+header = data.first()
+dataWoHeader = data.filter(lambda x: x<>header)
+
+// Parse the rows to extract fields
+dataWoHeader.map(lambda x:x.split(",")).take(10)
+
+import csv
+from StringIO import StringIO
+from collections import namedtuple
+
+fields = header.replace(" ","_").replace("/","_").split(",")
+
+Crime = namedtuple('Crime', fields, verbose=True)
+
+def parse(row):
+    reader = csv.reader(StringIO(row))
+    row = reader.next()
+    return Crime(*row)
+
+crimes = dataWoHeader.map(parse)
+
+crimes.map(lambda x:x.Offense).countByValue()
+
+crimesFiltered=crimes.filter(lambda x : not (x.Offense=='NA' or x.Occurrence_Year=='')).filter(lambda x : int(x.Occurrence_Year)>=2006)
+crimesFiltered.map(lambda x:x.Occurrence_Year).countByValue()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
