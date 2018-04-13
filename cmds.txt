@@ -35,6 +35,22 @@ crimesFiltered=crimes.filter(lambda x : not (x.Offense=='NA' or x.Occurrence_Yea
 crimesFiltered.map(lambda x:x.Occurrence_Year).countByValue()
 
 
+def extractCoords(location):
+    location_lat = float(location[1:location.index(",")])
+    location_lon = float(location[location.index(",")+1:-1])
+    return (location_lat,location_lon)
+
+// calc the min location:
+crimesFiltered.map(lambda x:extractCoords(x.Location_1)).reduce(lambda x,y:(min(x[0],y[0]),min(x[1],y[1])))
+
+// calc the max location:
+crimesFiltered.map(lambda x:extractCoords(x.Location_1)).reduce(lambda x,y:(max(x[0],y[0]),max(x[1],y[1])))
+
+crimesFinal = crimesFiltered.filter(lambda x: extractCoords(x.Location_1)[0] >= 40.477399 and \
+                                    extractCoords(x.Location_1)[0]<=40.917577 and \
+                                    extractCoords(x.Location_1)[1]>=-74.25909 and \
+                                    extractCoords(x.Location_1)[1]<=-73.700009)
+
 
 
 
