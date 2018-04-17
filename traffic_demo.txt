@@ -1,0 +1,50 @@
+// Load the data
+trafficPath = "file:///home/icoder/data/SparkBasic/Dodgers.data"
+gamesPath = "file:///home/icoder/data/SparkBasic/Dodgers.events"
+
+traffic = sc.textFile(trafficPath)
+traffic.take(10)
+games = sc.textFile(gamesPath)
+games.take(10)
+
+from datetime import datetime
+import csv
+from StringIO import StringIO
+
+def parseTraffic(row):
+    DATE_FMT = "%m/%d/%Y %H:%M"
+    row = row.split(",")
+    row[0] = datetime.strptime(row[0],DATE_FMT)
+    row[1] = int(row[1])
+    return (row[0],row[1])
+
+trafficParsed = traffic.map(parseTraffic)
+trafficParsed.take(10)
+
+// Summarizing a Pair RDD
+dailyTrend = trafficParsed.map(lambda x:(x[0].date(),x[1])).reduceByKey(lambda x,y:x+y)
+dailyTrend.take(10)
+dailyTrend.sortBy(lambda x:-x[1]).take(10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
