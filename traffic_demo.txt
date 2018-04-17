@@ -2,6 +2,10 @@
 trafficPath = "file:///home/icoder/data/SparkBasic/Dodgers.data"
 gamesPath = "file:///home/icoder/data/SparkBasic/Dodgers.events"
 
+trafficPath = "file:///Users/renqingwei/code/data/SparkBasic/Dodgers.data"
+gamesPath = "file:///Users/renqingwei/code/data/SparkBasic/Dodgers.events"
+
+
 traffic = sc.textFile(trafficPath)
 traffic.take(10)
 games = sc.textFile(gamesPath)
@@ -25,6 +29,42 @@ trafficParsed.take(10)
 dailyTrend = trafficParsed.map(lambda x:(x[0].date(),x[1])).reduceByKey(lambda x,y:x+y)
 dailyTrend.take(10)
 dailyTrend.sortBy(lambda x:-x[1]).take(10)
+
+
+// Joining with Games
+
+def parseGames(row):
+    DATE_FMT = "%m/%d/%y"
+    row = row.split(",")
+    row[0] = datetime.strptime(row[0],DATE_FMT).date()
+    return (row[0],row[4])
+
+gamesParsed = games.map(parseGames)
+dailyTrendCombined = dailyTrend.leftOuterJoin(gamesParsed)
+
+
+def checkGameDay(row):
+    if row[1][1] == None:
+        return (row[0],row[1][1],"Regular Day",row[1][0])
+    else:
+        return (row[0],row[1][1],"Game Day",row[1][0])
+
+dailyTrendbyGames = dailyTrendCombined.map(checkGameDay)
+dailyTrendbyGames.take(10)
+
+dailyTrendbyGames.sortBy(lambda x:-x[3]).take(10)
+
+
+// Average on Game Day vs Non Game day
+
+dailyTrendbyGames.map(lambda x:(x[2],x[3])).take(10)
+
+dailyTrendbyGames.map(lambda x:(x[2],x[3]))\
+                .combineByKey(lambda value: (value, 1), \
+                lambda acc, value:(acc[0]+value,acc[1]+1), \
+                lambda acc1, acc2:(acc1[0] + acc2[0], acc1[1] + acc2[1]))\
+                .mapValues(lambda x:x[0]/x[1])\
+                .collect()
 
 
 
