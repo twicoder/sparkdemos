@@ -1,0 +1,87 @@
+//
+
+booksPath = "file:///Users/renqingwei/code/data/SparkBasic/Books.txt"
+charactersPath = "file:///Users/renqingwei/code/data/SparkBasic/Characters.txt"
+edgesPath = "file:///Users/renqingwei/code/data/SparkBasic/Edges.txt"
+
+books = sc.textFile(booksPath)
+characters = sc.textFile(charactersPath)
+edges = sc.textFile(edgesPath)
+
+
+def edgeFilter(row):
+    if '*' in row or '"' in row:
+        return False
+    else:
+        return True
+
+edgesFiltered = edges.filter(edgeFilter)
+edgesFiltered.take(10)
+
+characterBookMap = edgesFiltered.map(lambda x:x.split()).map(lambda x:(x[0],x[1:]))
+characterBookMap.take(10)
+
+def charParse(row):
+    row = row.split(":")
+    return (row[0][7:],row[1].strip())
+
+characterLookup = characters.map(charParse).collectAsMap()
+characterStrength = characterBookMap.mapValues(lambda x:len(x)).map(lambda x:(characterLookup[x[0]],x[1])).reduceByKey(lambda x,y:x+y).sortBy(lambda x:-x[1])
+characterStrength.take(10)
+bookCharacterMap = characterBookMap.flatMapValues(lambda x:x).map(lambda x:(x[1],x[0])).reduceByKey(lambda x,y:x+","+y).mapValues(lambda x:x.split(","))
+
+import itertools
+cooccurenceMap = bookCharacterMap.flatMap(lambda x:list(itertools.combinations(x[1],2)))
+coocurrenceStrength = cooccurenceMap.map(lambda x:(x,1)).reduceByKey(lambda x,y:x+y)
+coocurrenceStrengh.take(10)
+
+cooccurrenceEdges = coocurrenceStrength.map(lambda x:(x[0][0],x[0][1],x[1]))
+cooccurrenceEdges.take(10)
+
+
+sortedCooccurrence = cooccurrenceEdges.sortBy(lambda x:-x[2]).map(lambda x:(characterLookup[x[0]],characterLookup[x[1]],x[2]))
+sortedCooccurrence.take(10)
+
+sortedCooccurrence.filter(lambda x:'SPIDER-MAN/PETER PARKER' in x).take(10)
+sortedCooccurrence.take(10)
+
+sortedCooccurrence.filter(lambda x:'CAPTAIN AMERICA' in x).take(10)
+
+
+sortedCooccurrence.map(lambda x:x[2]).stats()
+sortedCooccurrence.map(lambda x:int(x[2]/10)).countByValue()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
