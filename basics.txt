@@ -1,0 +1,3 @@
+./bin/spark-shell —master local[2]
+
+val filePath = "file:///home/icoder/data/SparkBasic/NYPD_7_Major_Felony_Incidents.csv"

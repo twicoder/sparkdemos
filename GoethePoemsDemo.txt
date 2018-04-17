@@ -1,0 +1,8 @@
+
+val poemsFilePath = "file:///Users/renqingwei/code/data/books/ThePoemsofGoethe.txt"
+val textFile = sc.textFile(poemsFilePath)
+
+textFile.count()
+
+textFile.first()
+
